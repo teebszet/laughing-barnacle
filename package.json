@@ -1,0 +1,6 @@
+{
+  "devDependencies": {
+    "jsctags": "git+https://github.com/ramitos/jsctags.git",
+    "learnyounode": "^3.2.0"
+  }
+}
