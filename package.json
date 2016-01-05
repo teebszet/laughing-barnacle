@@ -2,5 +2,10 @@
   "devDependencies": {
     "jsctags": "git+https://github.com/ramitos/jsctags.git",
     "learnyounode": "^3.2.0"
+  },
+  "dependencies": {
+    "clone": "^1.0.2",
+    "loglevel": "^1.4.0",
+    "prompt": "^0.2.14"
   }
 }
