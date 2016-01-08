@@ -1,95 +1,129 @@
 'use strict'
 
-var clone = require('clone');
 var log = require('loglevel');
 var readline = require('readline');
+var _ = require('lodash');
+
+var debug = (process.argv[2] === '-d') ? 1 : 0;
 
 /*
- * class Game
+ * Game Class
+ *
+ * Optional param grid size, defaults to 10
  */
-
+// game tiles
 var OCEAN = '~';
 var MISS = 'x';
 var HIT = '*';
 
 function Game (size) {
   // default variables in ES2015. TODO use babel
+  // gridSize is probably limited to 26 with current implementation
   this.gridSize = typeof size !== 'undefined' ? size : 10; // default 10
+  if (size <= 0 || !Number.isInteger(size)) {
+    this.gridSize = 10; 
+  }
+
   this.finished = 0;
 
   // multidimensional array to represent playing field
-  this._grid = new Array(this.gridSize);
-  for (var i = 0; i < this.gridSize; i++) {
-      this._grid[i] = new Array(this.gridSize).fill('~');
-  }
+  this._grid = _.range(size).map( function(){
+    return _.range(size).map( function(){
+      return OCEAN
+    });
+  });
 
   // hash containing ship names to length
   this._ships = {'battleship': 5, 'destroyer': 4};
 }
 
-function randInt (m) {
-  m = typeof m !== 'undefined' ? m : 1; // default 1
-  return Math.floor(Math.random() * m);
-}
-
+/*
+ * Returns 1 on success placing ship, else 0
+ *
+ * Expects key to item in self._ships, e.g. 'battleship'
+ */
 Game.prototype.placeShip = function (shipKey) {
-  var x = randInt(this.gridSize);
-  var y = randInt(this.gridSize);
-  // 0 - horizontal, 1 - vertical
-  var orientation = randInt(1);
+  var self = this;
 
+  var x = _.random(self.gridSize);
+  var y = _.random(self.gridSize);
+  var orientation = _.random(1); // 0 - horizontal, 1 - vertical
   log.debug('placing ' + shipKey + ' at:', x, y, orientation);
-  var gridClone = clone(this._grid);
-  for (var i = 0; i < this._ships[shipKey]; i++) {
+
+  // my brute force approach to placing ships:
+  //
+  // from a starting x,y we walk either in positive x or y direction
+  // and break out to start again if we hit anything
+  var success = 1;
+  var gridClone = _.cloneDeep(self._grid);
+  var shipLength = self._ships[shipKey];
+
+  _.times(shipLength, function() {
     // fail if ship not in bounds
-    if (x > (this.gridSize - 1) ||
-        y > (this.gridSize - 1)) {
+    if (x > (self.gridSize - 1) ||
+        y > (self.gridSize - 1)) {
       log.debug('invalid position. out of bounds. try again');
-      return 0; 
+      success = 0;
+      return; 
     }
     // fail if ship overlaps another ship
-    if (gridClone[y][x] !== '~'){
+    if (gridClone[y][x] !== OCEAN){
       log.debug('invalid position. overlapping ship. try again');
-      return 0; 
+      success = 0;
+      return; 
     }
 
-    gridClone[y][x] = shipKey[0];
+    gridClone[y][x] = shipKey[0]; // 'b' for 'battleship'
     if (orientation === 1) {
       x += 1;
     } else if (orientation === 0) {
       y += 1; 
     }
+  });
+
+  if (success) {
+    self._grid = gridClone;
+    return 1;
+  } else {
+    return 0;
   }
-  this._grid = gridClone;
-  return 1;
 }
 
-// probably a better way to do this algorithmically, but this is the brute
-// force approach
+/*
+ * Places ships on game grid
+ */
 Game.prototype.placeAllShips = function () {
-  while (!this.placeShip('battleship')) {};
-  while (!this.placeShip('destroyer')) {};
-  while (!this.placeShip('destroyer')) {};
+  var self = this;
+  // probably want a more robust way to do this, where it's obvious if the ships
+  // didn't all get placed. But let's not over-engineer a game of
+  // battleships...
+
+  var i = 100; // safety to bail out
+  while (!self.placeShip('battleship') && i ) { i-- };
+  while (!self.placeShip('destroyer')  && i ) { i-- };
+  while (!self.placeShip('destroyer')  && i ) { i-- };
 }
 
-var alpha = {a:0, b:1, c:2, d:3, e:4, f:5, g:6, h:7, i:8, j:9};
-function gameCoordsToXY (string) {
-  // really doesn't handle larger numbers than 99
+/*
+ * Returns { x: INT, y: INT } or undefined
+ * 
+ * Expects coordinate string like 'A10' or 'j1'
+ */
+Game.prototype.gameCoordsToXY = function (string) {
+  var self = this;
+
+  // hard limit of 99 for gridSize
   if (string.length < 2 || string.length > 3) {
     return;
   }
 
-  //TODO TEST THIS FUNCTION FOR A15
   var r = new Object();
-  string.split('').map(function(v, i){
-    var key = i === 0 ? 'x' : 'y';
-    if (key === 'x') {
-      v = alpha[v.toLowerCase()];
-    } else {
-      v -= 1; 
-    }
-    r[key] = v;
-  });
+  r.x = string
+    .slice(0)
+    .toLowerCase()
+    .charCodeAt(0) - 97; // hard limit of z=26 for gridSize
+
+  r.y = string.slice(1) - 1
   log.debug(r);
   return r;
 }
@@ -100,46 +134,103 @@ function gameCoordsToXY (string) {
  * Expects { x: INT, y: INT }
  */
 Game.prototype.validXY = function (r) {
-  // not an object
+  var self = this;
+
   if (!r) {
+    log.debug('x,y not returned');
     return;
   }
 
-  if (!Number(r.x) || !Number(r.y)) {
+  if (!Number.isInteger(r.x) || !Number.isInteger(r.y)) {
+    log.debug('x or y returned not integer');
     return;
   }
 
-  if (r.x > this.gridSize || r.y > this.gridSize) {
+  if ( 0 > r.x || r.x >= self.gridSize
+    || 0 > r.y || r.y >= self.gridSize) {
+    log.debug('x or y returned was outside grid');
     return;
   }
 
   return 1;
 }
 
+/*
+ * Game action to handle coordinate input
+ *
+ * Returns 1 if Hit, 0 if Miss, else undef
+ * 
+ * Expects string like 'A1' or 'j10'
+ */
 Game.prototype.fireAt = function (coords) {
-  var r = gameCoordsToXY(coords);
-  if (!this.validXY(r)) {
+  var self = this;
+
+  var r = self.gameCoordsToXY(coords);
+  if (!self.validXY(r)) {
     log.info("that's not a valid coordinate");
     return;
   }
 
-  switch (this._grid[r.y][r.x]) {
+  switch (self._grid[r.y][r.x]) {
     case OCEAN:
     case MISS: 
-      this._grid[r.y][r.x] = MISS;
+      self._grid[r.y][r.x] = MISS;
       return 0;
     default:
-      this._grid[r.y][r.x] = HIT;
+      self._grid[r.y][r.x] = HIT;
       return 1;
   }
 }
 
-Game.prototype.printGrid = function () {
-  log.info(this._grid);
-  log.info('\n\n\n\n\n');
-}
-// end class GAME
+/*
+ * Returns a game grid where ships have been masked with OCEAN
+ */
+Game.prototype.maskGameGrid = function () {
+  var self = this;
 
+  self.finished = 1;
+  var gameGrid = self._grid.map( function (i) {
+    return i.map( function (v) {
+      switch (v) {
+        case HIT:
+        case MISS:
+        case OCEAN:
+          return v;
+        default:
+          self.finished = 0;
+          return OCEAN;
+      }
+    });
+  });
+  
+  return gameGrid;
+}
+
+/*
+ * Prints game grid internal representation
+ */
+Game.prototype.printDebugGrid = function () {
+  log.debug(this._grid);
+  log.debug('\n\n\n\n\n');
+}
+
+/*
+ * Prints game grid external representation
+ */
+Game.prototype.printGameGrid = function () {
+  log.info(this.maskGameGrid());
+  if (this.finished) {
+    log.info("YOU SUNK EM ALL!"); 
+  }
+  log.info('\n\n\n\n\n');
+
+  this.printDebugGrid();
+}
+// end class Game
+
+/*******************
+ * MAIN
+ */
 var rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
@@ -148,19 +239,22 @@ var rl = readline.createInterface({
 function run (g) {
   rl.question("where them ships at? ", function(coords) {
     log.info('\x1B[2J');
-    if (coords === 'exit') {
+    if (coords === 'exit' || g.finished) {
       return rl.close();
     }
     var hit = g.fireAt(coords);
     if (hit) {
       log.info('HIT\n');
     }
-    g.printGrid();
+    g.printGameGrid();
     run(g);
   });
 }
 
 log.setLevel('info');
+if (debug) {
+  log.setLevel('debug');
+}
 log.info('\x1B[2J');
 
 rl.question('welcome to battleships\n\n PRESS ENTER', function() {
@@ -170,7 +264,7 @@ rl.question('welcome to battleships\n\n PRESS ENTER', function() {
 
   var g = new Game(10);
   g.placeAllShips();
-  g.printGrid();
+  g.printGameGrid();
   run(g);
 });
 
