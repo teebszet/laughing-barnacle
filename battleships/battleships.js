@@ -110,30 +110,7 @@ class Game {
 
     return;
   }
-  
-  /*
-   * Returns { x: INT, y: INT } or undefined
-   * Expects coordinate string like 'A10' or 'j1'
-   */
-  gameCoordsToXY(coords) {
-    let self = this;
-  
-    // hard limit of 99 for gridSize
-    if (coords.length < 2 || coords.length > 3) {
-      return;
-    }
-  
-    var r = new Object();
-    r.x = coords
-      .slice(0)
-      .toLowerCase()
-      .charCodeAt(0) - 97; // hard limit of z=26 for gridSize
-  
-    r.y = coords.slice(1) - 1;
-    log.debug(r);
-    return r;
-  }
-  
+
   /*
    * Returns 1 if valid, else undef
    * Expects { x: INT, y: INT }
@@ -159,6 +136,36 @@ class Game {
   }
   
   /*
+   * Returns { x: INT, y: INT } or undefined
+   * Expects coordinate string like 'A10' or 'j1'
+   */
+  gameCoordsToXY(coords) {
+    let self = this;
+
+    if (!coords) {
+      return; 
+    }
+    // hard limit of 99 for gridSize
+    if (coords.length < 2 || coords.length > 3) {
+      return;
+    }
+  
+    var r = new Object();
+    r.x = coords
+      .slice(0)
+      .toLowerCase()
+      .charCodeAt(0) - 97; // hard limit of z=26 for gridSize
+  
+    r.y = coords.slice(1) - 1;
+    log.debug(r);
+
+    if (self.validXY(r)) {
+      return r; 
+    }
+    return;
+  }
+  
+  /*
    * Game action to handle coordinate input
    *
    * Returns 1 if Hit, 0 if Miss, else undef
@@ -168,7 +175,7 @@ class Game {
     let self = this;
   
     let r = self.gameCoordsToXY(coords);
-    if (!self.validXY(r)) {
+    if (!r) {
       log.info("that's not a valid coordinate");
       return;
     }

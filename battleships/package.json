@@ -2,5 +2,13 @@
   "dependencies": {
     "lodash": "^3.10.1",
     "loglevel": "^1.4.0"
+  },
+  "devDependencies": {
+    "chai": "^3.4.1",
+    "mocha": "^2.3.4"
+  },
+  "scripts": {
+    "test": "mocha",
+    "start": "node run_game.js"
   }
 }
