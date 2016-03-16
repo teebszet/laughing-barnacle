@@ -1,0 +1,15 @@
+{
+  "name": "web-server",
+  "version": "0.0.0",
+  "description": "staging",
+  "main": "/home/tim/code/share/nestoria.com/public_html/index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Tim Man",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.13.3",
+    "serve-index": "^1.7.2"
+  }
+}
