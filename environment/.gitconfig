@@ -1,0 +1,25 @@
+[user]
+	name = Tim Man
+	email = tim@lokku.com
+
+[alias]
+
+    lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
+
+    lge = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an (%ae)>%Creset' --abbrev-commit --date=relative
+
+    ci = commit
+
+    st = status
+
+    purr = pull --rebase
+
+[core]
+
+    editor = vim
+
+[color]
+
+    ui = auto
+[push]
+	default = simple

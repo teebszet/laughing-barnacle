@@ -1,0 +1,105 @@
+[global_config]
+  title_receive_bg_color = "#1f84cb"
+  enabled_plugins = LaunchpadCodeURLHandler, APTURLHandler, LaunchpadBugURLHandler
+  title_transmit_bg_color = "#d84749"
+  inactive_color_offset = 0.81
+[keybindings]
+  close_term = <Primary><Shift>F1
+[profiles]
+  [[default]]
+    background_image = None
+    background_darkness = 0.8
+    background_type = transparent
+    cursor_color = "#ffffff"
+    foreground_color = "#94ecff"
+    show_titlebar = False
+    font = Monospace Bold 10
+    scrollback_infinite = True
+  [[kousaka]]
+    background_image = None
+    background_darkness = 0.9
+    background_type = transparent
+    cursor_color = "#ffffff"
+    foreground_color = "#94ecff"
+    show_titlebar = False
+    font = Monospace Bold 10
+    scrollback_infinite = True
+  [[juban]]
+    background_image = None
+    background_darkness = 0.9
+    background_type = transparent
+    cursor_color = "#ffffff"
+    foreground_color = "#94ecff"
+    use_custom_command = True
+    show_titlebar = False
+    custom_command = ssh juban
+    font = Monospace Bold 10
+    scrollback_infinite = True
+[layouts]
+  [[default]]
+    [[[child1]]]
+      type = Terminal
+      parent = window0
+      profile = default
+    [[[window0]]]
+      type = Window
+      parent = ""
+  [[juban-layout]]
+    [[[child0]]]
+      position = 1680:24
+      type = Window
+      order = 0
+      parent = ""
+      size = 642, 427
+    [[[terminal1]]]
+      profile = kousaka
+      command = ssh juban
+      type = Terminal
+      order = 0
+      parent = child0
+  [[listingsdb]]
+    [[[child0]]]
+      position = 0:24
+      type = Window
+      order = 0
+      parent = ""
+      size = 1680, 1026
+    [[[child1]]]
+      position = 840
+      type = HPaned
+      order = 0
+      parent = child0
+    [[[child2]]]
+      position = 513
+      type = VPaned
+      order = 0
+      parent = child1
+    [[[child5]]]
+      position = 513
+      type = VPaned
+      order = 1
+      parent = child1
+    [[[terminal3]]]
+      profile = kousaka
+      type = Terminal
+      order = 0
+      parent = child2
+    [[[terminal4]]]
+      profile = kousaka
+      type = Terminal
+      order = 1
+      parent = child2
+      command = "ssh -t '"
+    [[[terminal7]]]
+      profile = kousaka
+      type = Terminal
+      order = 1
+      parent = child5
+      command = lorc
+    [[[terminal6]]]
+      profile = kousaka
+      type = Terminal
+      order = 0
+      parent = child5
+      command = ssh lokku@m2
+[plugins]
